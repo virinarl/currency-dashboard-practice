@@ -1,10 +1,41 @@
 import { useState } from "react";
 import ExchangeRateDisplay from "./ExchangeRateDisplay";
+import axios from "axios";
 
 const CurrencyConverter = () => {
   const currencies = ["BTC", "ETH", "USD"];
-  const [OriginalCurrency, setOriginalCurrency] = useState("BTC");
-  const [SecondaryCurrency, setSecondaryCurrency] = useState("BTC");
+  const [originalCurrency, setOriginalCurrency] = useState("BTC");
+  const [secondaryCurrency, setSecondaryCurrency] = useState("BTC");
+  const [amount, setAmount] = useState(0);
+  const [result, setResult] = useState(0);
+
+  const convert = () => {
+    const options = {
+      method: "GET",
+      url: "https://alpha-vantage.p.rapidapi.com/query",
+      params: {
+        from_currency: originalCurrency,
+        function: "CURRENCY_EXCHANGE_RATE",
+        to_currency: secondaryCurrency,
+      },
+      headers: {
+        "x-rapidapi-host": "alpha-vantage.p.rapidapi.com",
+        "x-rapidapi-key": "45afa4811dmsh948a203d5fc2f2bp1944f2jsn85b5e2f5a078",
+      },
+    };
+
+    axios
+      .request(options)
+      .then((response) => {
+        setResult(
+          response.data["Realtime Currency Exchange Rate"]["5. Exchange Rate"] *
+            amount
+        );
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
 
   return (
     <div className="currency-converter">
@@ -18,12 +49,13 @@ const CurrencyConverter = () => {
                 <input
                   type="number"
                   name="original-currency-amount"
-                  value={""}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
                 />
               </td>
               <td>
                 <select
-                  value={OriginalCurrency}
+                  value={originalCurrency}
                   name="original-currency"
                   className="original-currency-option"
                   onChange={(e) => setOriginalCurrency(e.target.value)}
@@ -38,14 +70,14 @@ const CurrencyConverter = () => {
               <td>To:</td>
               <td>
                 <input
-                  type="number"
                   name="secondary-currency-amount"
-                  value={""}
+                  value={result}
+                  disabled={true}
                 />
               </td>
               <td>
                 <select
-                  value={SecondaryCurrency}
+                  value={secondaryCurrency}
                   name="secondary-currency"
                   className="secondary-currency-option"
                   onChange={(e) => setSecondaryCurrency(e.target.value)}
@@ -58,6 +90,9 @@ const CurrencyConverter = () => {
             </tr>
           </tbody>
         </table>
+        <button id="convert-button" onClick={convert}>
+          Convert
+        </button>
       </div>
       <ExchangeRateDisplay />
     </div>
